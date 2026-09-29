@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Spot Garage interactive sales dashboard prototype">
+  <title>Spot Garage · Sales Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <aside class="sidebar" id="mainNav" aria-label="Main navigation">
+    <a class="sidebar-brand" href="#overview" data-nav="overview" aria-label="Spot Garage dashboard home">
+      <img src="LOGO.jpg" alt="Spot Garage logo">
+    </a>
+    <nav>
+      <a class="nav-link active" href="#overview" data-nav="overview"><span>⌂</span>Overview</a>
+      <a class="nav-link" href="#sales-trend" data-nav="sales-trend"><span>⌁</span>Sales Trend</a>
+      <a class="nav-link" href="#products" data-nav="products"><span>♜</span>Products</a>
+      <a class="nav-link" href="#customers" data-nav="customers"><span>♟</span>Customers</a>
+      <a class="nav-link" href="#regional" data-nav="regional"><span>⌖</span>Regional Performance</a>
+      <a class="nav-link" href="#profitability" data-nav="profitability"><span>◎</span>Profitability</a>
+      <a class="nav-link" href="#reports" data-nav="reports"><span>▤</span>Reports</a>
+    </nav>
+    <div class="sidebar-footer"><p>GOOD FOOD<br>GREAT VIBES<br>STRONGER COMMUNITY</p><i></i><div class="checker" aria-hidden="true"></div></div>
+  </aside>
+  <button class="sidebar-backdrop" id="sidebarBackdrop" aria-label="Close navigation"></button>
+  <header class="topbar">
+    <button class="hamburger icon-button" id="menuButton" aria-label="Open navigation" aria-expanded="false">☰</button>
+    <div class="page-title"><b>Sales Performance Dashboard</b><small>Track sales. Spot trends. Plan ahead.</small></div>
+    <div class="top-actions">
+      <div class="search-wrap">
+        <span aria-hidden="true">⌕</span>
+        <input id="searchInput" type="search" placeholder="Search products, regions…" aria-label="Search dashboard">
+        <button id="clearSearch" class="clear-search" aria-label="Clear search">×</button>
+      </div>
+      <div class="menu-anchor">
+        <button class="icon-button" id="notificationsButton" aria-label="Notifications" aria-expanded="false">♢<i></i></button>
+        <div class="dropdown" id="notificationsMenu"><b>Notifications</b><p>Dashboard prototype is using demo data.</p><p>Your monthly report is ready to export.</p></div>
+      </div>
+      <div class="menu-anchor">
+        <button class="icon-button" id="utilityButton" aria-label="Quick actions" aria-expanded="false">⋮</button>
+        <div class="dropdown compact" id="utilityMenu"><button data-action="refresh">↻ Refresh data</button><button data-action="export">↓ Export CSV</button><button data-action="top">↑ Back to top</button></div>
+      </div>
+      <div class="menu-anchor profile-anchor">
+        <button class="profile-button" id="profileButton" aria-expanded="false"><span>SG</span><em><b>Admin</b><small>Manager</small></em><strong>⌄</strong></button>
+        <div class="dropdown compact profile-menu" id="profileMenu"><button data-action="profile">Profile</button><button data-action="settings">Account Settings</button><button data-action="logout">Logout</button></div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="overview">
+      <div><p class="eyebrow">SALES INTELLIGENCE · DEMO DATA</p><h1>Good numbers.<br><span>Better decisions.</span></h1><p>Track performance across every Spot Garage location with one clear view.</p></div>
+      <img src="spot_garage_motorcycle_transparent.png" alt="Spot Garage retro motorcycle illustration">
+    </section>
+
+    <section class="filters" aria-label="Dashboard filters">
+      <label><span>Date range</span><select id="dateFilter"><option value="all">Full year · 2024</option><option value="q1">Jan – Mar</option><option value="q2">Apr – Jun</option><option value="q3">Jul – Sep</option><option value="q4">Oct – Dec</option></select></label>
+      <label><span>Region</span><select id="regionFilter"><option value="all">All regions</option></select></label>
+      <label><span>Product category</span><select id="categoryFilter"><option value="all">All products</option></select></label>
+      <label><span>Payment type</span><select id="paymentFilter"><option value="all">All payment types</option></select></label>
+      <button class="reset-button" id="resetFilters">↻ Reset filters</button>
+    </section>
+
+    <div class="results-line"><span id="resultCount"></span><span>Figures below are generated from the centralized demo dataset.</span></div>
+    <section class="kpi-grid" id="kpis" aria-label="Key performance indicators"></section>
+
+    <section class="dashboard-grid">
+      <article class="panel sales-panel" id="sales-trend">
+        <div class="panel-head"><div><p class="panel-kicker">PERFORMANCE</p><h2>Monthly sales trend</h2></div><div class="legend"><span><i class="dot sales"></i>Net sales</span><span><i class="dot receipts"></i>Receipts</span></div></div>
+        <div class="chart-wrap"><canvas id="salesChart" role="img" aria-label="Interactive monthly net sales chart"></canvas><div class="chart-tooltip" id="chartTooltip"></div></div>
+      </article>
+
+      <article class="panel products-panel" id="products">
+        <div class="panel-head"><div><p class="panel-kicker">MIX</p><h2>Top products</h2></div><span class="badge">By sales</span></div>
+        <div id="productList" class="product-list"></div>
+      </article>
+
+      <article class="panel regional-panel" id="regional">
+        <div class="panel-head"><div><p class="panel-kicker">LOCATIONS</p><h2>Regional performance</h2></div><span class="badge">Click a region</span></div>
+        <div id="regionList" class="region-list"></div>
+      </article>
+
+      <article class="panel profitability-panel" id="profitability">
+        <div class="panel-head"><div><p class="panel-kicker">MARGIN · DEMO ESTIMATE</p><h2>Profitability analysis</h2></div><div class="legend"><span><i class="dot sales"></i>Net sales</span><span><i class="dot profit"></i>Estimated profit</span></div></div>
+        <div class="profit-chart-wrap"><canvas id="profitChart" role="img" aria-label="Hardcoded demo profitability chart"></canvas><div class="chart-tooltip" id="profitTooltip"></div></div>
+        <div class="profit-summary"><div><small>Estimated profit</small><strong id="estimatedProfit">₱0</strong></div><div><small>Average demo margin</small><strong id="profitMargin">0%</strong></div></div>
+        <p class="data-note">Demo estimate only. Margin assumptions are hardcoded and are not from actual POS cost data.</p>
+      </article>
+
+      <article class="panel periods-panel">
+        <div class="panel-head"><div><p class="panel-kicker">TIMING</p><h2>Peak & off-peak</h2></div></div>
+        <div id="periods"></div>
+      </article>
+
+      <article class="panel customers-panel" id="customers">
+        <div class="panel-head"><div><p class="panel-kicker">AUDIENCE</p><h2>Customer snapshot</h2></div></div>
+        <div class="customer-content"><div><strong id="customerTransactions">0</strong><span>estimated transactions</span></div><p>Customer identity and loyalty fields are not included in the demo dataset. Connect a POS customer export for repeat-customer reporting.</p></div>
+      </article>
+
+      <article class="panel reports-panel" id="reports">
+        <div><p class="panel-kicker">EXPORT</p><h2>Ready for a closer look?</h2><p>Download the currently filtered demo rows as a CSV report.</p></div>
+        <button class="primary-button" id="exportReport">Download current report ↓</button>
+      </article>
+    </section>
+  </main>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
