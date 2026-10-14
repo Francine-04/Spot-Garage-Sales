@@ -50,5 +50,7 @@ app.post('/api/exports',wrap(async(req,res)=>{
 }));
 app.use('/api',(req,res)=>res.status(404).json({error:'Unknown API route.'}));
 app.use(express.static(path.resolve('dist')));app.get('/{*path}',(req,res)=>res.sendFile(path.resolve('dist/index.html')));
-app.use((error,req,res,next)=>{console.error('API failure:',error.code||error.name);const missing=['42P01','PGRST205','PGRST202'].includes(error.code);res.status(missing?503:400).json({error:missing?'Database migration is not applied yet. Existing historical records remain available.':error.code?'Database operation failed. No success was confirmed.':error.message});});
+app.use((error,req,res,next)=>{console.error('API failure:',error.code||error.name);const denied=['42501','PGRST301','PGRST302','PGRST303','401','403'].includes(String(error.code));
+ if(denied)return res.status(503).json({error:'Supabase rejected the server connection. Check that Vercel SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY belong to the same project and use the server service-role key, then redeploy.',code:String(error.code)});
+ const missing=['42P01','PGRST205','PGRST202'].includes(error.code);res.status(missing?503:400).json({code:error.code||'REQUEST_FAILED',error:missing?'Database migration is not applied yet. Existing historical records remain available.':error.code?'Database operation failed. No success was confirmed.':error.message});});
 export default app;

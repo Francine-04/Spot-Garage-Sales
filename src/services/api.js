@@ -1,6 +1,6 @@
 export async function api(path,body){
  const response=await fetch('/api'+path,{method:body===undefined?'GET':'POST',headers:{'Content-Type':'application/json','X-Spot-Garage-Request':'1'},...(body===undefined?{}:{body:JSON.stringify(body)})});
- if(!response.headers.get('content-type')?.includes('application/json'))throw new Error('Start the connected dashboard with npm run serve and open http://localhost:8090.');
+ if(!response.headers.get('content-type')?.includes('application/json'))throw new Error('The backend did not return JSON. Check the deployment API routing and server environment variables.');
  const data=await response.json();if(!response.ok){if([401,403].includes(response.status)&&!path.startsWith('/auth/')&&typeof window!=='undefined')window.dispatchEvent(new Event('spot-auth-expired'));throw new Error(data.error||'Request failed.');}if(body!==undefined&&/^\/(entries|products)/.test(path)&&typeof BroadcastChannel!=='undefined'){const channel=new BroadcastChannel('spot-garage-sales-updates');channel.postMessage({changed:true});channel.close();}return data;
 }
 export async function downloadReport(filters){
