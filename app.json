@@ -12,7 +12,9 @@
       "expo-font"
     ],
     "web": {
-      "favicon": "./assets/images/spot-garage-logo.jpg"
+      "favicon": "./assets/images/spot-garage-logo.jpg",
+      "bundler": "metro",
+      "output": "single"
     }
   }
 }
