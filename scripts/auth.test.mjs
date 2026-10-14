@@ -5,6 +5,7 @@ process.env.SUPABASE_URL='https://example.supabase.co';
 process.env.SUPABASE_SERVICE_ROLE_KEY='test-key';
 process.env.ADMIN_USER_IDS='11111111-1111-4111-8111-111111111111';
 process.env.APP_ORIGIN='http://localhost:8090';
+process.env.PUBLIC_ACCESS='false';
 const {adminGuard,protectRequest}=await import('../server/auth.mjs');
 const {default:app}=await import('../server/index.mjs');
 const {db}=await import('../server/db.mjs');
@@ -48,4 +49,12 @@ test('Password login sets HttpOnly cookie only for approved admins',async()=>{
  let approved=false;const authApp=express();authApp.use(express.json());authApp.use(createAuthRouter(()=>({auth:{signInWithPassword:async()=>({data:{user:{id:approved?process.env.ADMIN_USER_IDS:'other',email_confirmed_at:'2026-01-01'},session:{access_token:'test-token',expires_at:Math.floor(Date.now()/1000)+3600}}}),signOut:async()=>({})}})));
  const server=authApp.listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));const url=`http://127.0.0.1:${server.address().port}/login`,options={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:'test@example.com',password:'test-password',remember:true})};
  try{assert.equal((await fetch(url,options)).status,401);approved=true;const res=await fetch(url,options);assert.equal(res.status,200);assert.match(res.headers.get('set-cookie'),/HttpOnly/);assert.match(res.headers.get('set-cookie'),/SameSite=Strict/);assert.ok(!(await res.text()).includes('test-token'));}finally{await new Promise(resolve=>server.close(resolve));}
+});
+test('Explicit public mode accepts one-click login and marks unverified audit actor',async()=>{
+ process.env.PUBLIC_ACCESS='true';
+ const req={headers:{}},res=response();let called=false;
+ try{await adminGuard({getUser:()=>{throw Error('Public mode must not authenticate');}})(req,res,()=>{called=true;});assert.ok(called);assert.equal(req.admin.id,'public-visitor');
+ const server=app.listen(0,'127.0.0.1');await new Promise(resolve=>server.once('listening',resolve));
+ try{const result=await fetch(`http://127.0.0.1:${server.address().port}/api/auth/login`,{method:'POST',headers:{Origin:process.env.APP_ORIGIN,'X-Spot-Garage-Request':'1','Content-Type':'application/json'},body:'{}'});assert.equal(result.status,200);assert.equal((await result.json()).user.id,'public-visitor');}finally{await new Promise(resolve=>server.close(resolve));}
+ }finally{process.env.PUBLIC_ACCESS='false';}
 });

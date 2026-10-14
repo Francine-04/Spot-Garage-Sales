@@ -1,3 +1,25 @@
+# Current access mode: public, one-click entry
+
+The owner requested public read/write access. `vercel.json` sets
+`PUBLIC_ACCESS=true` for the server function. Sign In accepts empty fields
+and opens the dashboard without Supabase authentication. Logout returns to
+Sign In. All visitors can read sales, add products, save sales, reverse today's
+orders and export reports. Audit actors are `public-visitor`, not a verified
+person. Origin validation is request hygiene, not visitor authorization.
+
+Required Vercel server variables remain SUPABASE_URL,
+SUPABASE_SERVICE_ROLE_KEY, and APP_ORIGIN (the exact public HTTPS origin).
+ADMIN_USER_IDS is not required in public mode. Never expose the service-role
+key in browser variables. Existing RLS and audit history remain unchanged.
+No production records were modified during implementation or testing.
+
+For local public access, set PUBLIC_ACCESS=true in ignored .env.server.
+To restore admin-only access, set PUBLIC_ACCESS=false in Vercel, configure
+ADMIN_USER_IDS, and redeploy. The admin-mode documentation below applies
+only when public access is disabled.
+
+---
+
 # Production: Expo web + Express on Vercel
 
 ## Deployment settings

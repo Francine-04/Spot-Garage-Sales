@@ -38,5 +38,8 @@
         }
       ]
     }
-  ]
+  ],
+  "env": {
+    "PUBLIC_ACCESS": "true"
+  }
 }

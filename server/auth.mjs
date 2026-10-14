@@ -3,6 +3,8 @@ import {rateLimit} from 'express-rate-limit';
 import {createClient} from '@supabase/supabase-js';
 import {db} from './db.mjs';
 
+const publicAccess=()=>process.env.PUBLIC_ACCESS==='true';
+const visitor={id:'public-visitor',email:null};
 const production=()=>process.env.NODE_ENV==='production'||!!process.env.VERCEL;
 const cookieName=()=>production()?'__Host-spot-session':'spot-session';
 function token(req){
@@ -25,6 +27,7 @@ export function protectRequest(req,res,next){
 // A verified Supabase user AND a server-controlled UUID allowlist are required
 // before any database query or RPC. Browser metadata never grants permissions.
 export function adminGuard(auth=db.auth){return async(req,res,next)=>{
+ if(publicAccess()){req.admin={...visitor};return next();}
  if(!(process.env.ADMIN_USER_IDS||'').trim())return res.status(503).json({error:'Administrator access is not configured.'});
  const accessToken=token(req);if(!accessToken)return res.status(401).json({error:'Sign in to continue.'});
  try{const {data,error}=await auth.getUser(accessToken);
@@ -37,6 +40,7 @@ export const requireAdmin=adminGuard();
 export function createAuthRouter(clientFactory=()=>createClient(process.env.SUPABASE_URL,process.env.SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}})){
  const router=Router();
  router.post('/login',rateLimit({windowMs:15*60*1000,limit:10}),async(req,res)=>{
+  if(publicAccess())return res.json({user:visitor,publicAccess:true});
   if(!(process.env.ADMIN_USER_IDS||'').trim())return res.status(503).json({error:'Administrator access is not configured.'});
   const {email,password,remember}=req.body||{};
   if(typeof email!=='string'||email.length>254||typeof password!=='string'||!password||password.length>1024)return res.status(400).json({error:'Enter your email and password.'});
@@ -49,8 +53,8 @@ export function createAuthRouter(clientFactory=()=>createClient(process.env.SUPA
    res.json({user:{id:data.user.id,email:data.user.email},expiresAt:data.session.expires_at});
   }catch{return res.status(503).json({error:'Sign-in is temporarily unavailable.'});}
  });
- router.get('/session',requireAdmin,(req,res)=>res.json({user:req.admin}));
- router.post('/logout',async(req,res)=>{const accessToken=token(req);cookie(res,'',0);if(accessToken){try{await db.auth.admin.signOut(accessToken,'local');}catch{/* Cookie is still removed. */}}res.json({ok:true});});
+ router.get('/session',(req,res,next)=>publicAccess()?res.status(401).json({error:'Click Sign In to open the dashboard.'}):next(),requireAdmin,(req,res)=>res.json({user:req.admin}));
+ router.post('/logout',async(req,res)=>{const accessToken=token(req);cookie(res,'',0);if(accessToken&&!publicAccess()){try{await db.auth.admin.signOut(accessToken,'local');}catch{/* Cookie is still removed. */}}res.json({ok:true});});
  // No public signup or user-management endpoint is provided.
  return router;
 }
