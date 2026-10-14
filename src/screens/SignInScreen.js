@@ -1,4 +1,3 @@
-import {api} from '../services/api';
 import React, {useState} from 'react';
 import {Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions} from 'react-native';
 import {MaterialCommunityIcons as Icon} from '@expo/vector-icons';
@@ -7,7 +6,7 @@ export default function SignInScreen({onSignIn}) {
   const {width,height}=useWindowDimensions();
   const mobile=width<760;
   const [busy,setBusy]=useState(false);
-  const submit=async()=>{if(busy)return;setBusy(true);setNotice('');try{const result=await api('/auth/login',{email,password,remember});setPassword('');onSignIn(result.user);}catch(error){setNotice(error.message);}finally{setBusy(false);}};
+  const submit=()=>onSignIn({id:'public-visitor',email:null});
   const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[visible,setVisible]=useState(false),[remember,setRemember]=useState(false),[notice,setNotice]=useState('');
   return <ScrollView contentContainerStyle={[s.page,{padding:mobile?16:Math.min(48,width*.035),minHeight:height}]} keyboardShouldPersistTaps="handled">
     <View style={[s.card,{flexDirection:mobile?'column':'row',minHeight:mobile?0:Math.min(740,height-72)}]}>
@@ -19,7 +18,7 @@ export default function SignInScreen({onSignIn}) {
       </View>
       <View style={[s.form,{padding:mobile?24:Math.min(58,width*.04)}]}>
         <Text style={[s.title,{fontSize:mobile?30:40}]}>Admin Sign In</Text>
-        <Text style={s.subtitle}>Enter your credentials to access the dashboard.</Text>
+        <Text style={s.subtitle}>Click Sign In to open your sales dashboard.</Text>
         <View style={{gap:22,marginTop:mobile?28:42}}>
           <View style={s.field}><Text style={s.label}>Email Address</Text><View style={s.inputWrap}><Icon name="email-outline" size={23} color="#746C64"/><TextInput accessibilityLabel="Email Address" placeholder="admin@spotgarage.com" placeholderTextColor="#9A938D" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" style={s.input} onSubmitEditing={submit}/></View></View>
           <View style={s.field}><Text style={s.label}>Password</Text><View style={s.inputWrap}><Icon name="lock-outline" size={23} color="#746C64"/><TextInput accessibilityLabel="Password" placeholder="Enter password" placeholderTextColor="#9A938D" secureTextEntry={!visible} value={password} onChangeText={setPassword} autoCapitalize="none" style={s.input} onSubmitEditing={submit}/><Pressable accessibilityRole="button" accessibilityLabel={visible?'Hide password':'Show password'} onPress={()=>setVisible(!visible)} style={s.eye}><Icon name={visible?'eye-outline':'eye-off-outline'} size={22} color="#746C64"/></Pressable></View></View>
