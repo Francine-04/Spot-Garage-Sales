@@ -12,9 +12,10 @@
     "test:entries": "node --test scripts/backend.test.mjs",
     "test:responsive": "node scripts/connected-check.cjs",
     "test:interactions": "node scripts/connected-interactions.cjs",
-    "serve": "node server/index.mjs",
+    "serve": "node server/local.mjs",
     "test:backend": "node --test scripts/backend.test.mjs",
-    "build": "expo export --platform web"
+    "build": "expo export --platform web",
+    "test:auth": "node --test scripts/auth.test.mjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

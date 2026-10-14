@@ -1,3 +1,4 @@
+import {api} from './src/services/api';
 import GlobalSearchResults from './src/components/GlobalSearchResults';
 import SignInScreen from './src/screens/SignInScreen';
 import {DatabaseProvider,useDatabase,reportDates} from './src/state/DatabaseContext';
@@ -191,7 +192,13 @@ function AnalyticsPage({page,monthly,products,regionsData,receipts,netSales,item
 
 
 
-export default function App(){const [signedIn,setSignedIn]=useState(false);return signedIn?<DatabaseProvider><AppShell onLogout={()=>setSignedIn(false)}/></DatabaseProvider>:<SignInScreen onSignIn={()=>setSignedIn(true)}/>;}
+export default function App(){
+ const [user,setUser]=useState(null),[checking,setChecking]=useState(true),[authError,setAuthError]=useState('');
+ useEffect(()=>{let live=true;api('/auth/session').then(result=>{if(live)setUser(result.user);}).catch(()=>{}).finally(()=>{if(live)setChecking(false);});const expire=()=>setUser(null);if(typeof window!=='undefined')window.addEventListener('spot-auth-expired',expire);return()=>{live=false;if(typeof window!=='undefined')window.removeEventListener('spot-auth-expired',expire);};},[]);
+ const logout=async()=>{try{await api('/auth/logout',{});setUser(null);setAuthError('');}catch(error){setAuthError('Logout failed. Please retry: '+error.message);}};
+ if(checking)return <View style={{flex:1,alignItems:'center',justifyContent:'center',backgroundColor:C.cream}}><ActivityIndicator color={C.brown}/><Text>Checking session...</Text></View>;
+ return user?<DatabaseProvider>{!!authError&&<Text accessibilityLiveRegion="polite">{authError}</Text>}<AppShell onLogout={logout}/></DatabaseProvider>:<SignInScreen onSignIn={setUser}/>;
+}
 function AppShell({onLogout}) {
  const database=useDatabase();
 

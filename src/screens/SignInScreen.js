@@ -1,3 +1,4 @@
+import {api} from '../services/api';
 import React, {useState} from 'react';
 import {Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions} from 'react-native';
 import {MaterialCommunityIcons as Icon} from '@expo/vector-icons';
@@ -5,6 +6,8 @@ import {MaterialCommunityIcons as Icon} from '@expo/vector-icons';
 export default function SignInScreen({onSignIn}) {
   const {width,height}=useWindowDimensions();
   const mobile=width<760;
+  const [busy,setBusy]=useState(false);
+  const submit=async()=>{if(busy)return;setBusy(true);setNotice('');try{const result=await api('/auth/login',{email,password,remember});setPassword('');onSignIn(result.user);}catch(error){setNotice(error.message);}finally{setBusy(false);}};
   const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[visible,setVisible]=useState(false),[remember,setRemember]=useState(false),[notice,setNotice]=useState('');
   return <ScrollView contentContainerStyle={[s.page,{padding:mobile?16:Math.min(48,width*.035),minHeight:height}]} keyboardShouldPersistTaps="handled">
     <View style={[s.card,{flexDirection:mobile?'column':'row',minHeight:mobile?0:Math.min(740,height-72)}]}>
@@ -18,12 +21,12 @@ export default function SignInScreen({onSignIn}) {
         <Text style={[s.title,{fontSize:mobile?30:40}]}>Admin Sign In</Text>
         <Text style={s.subtitle}>Enter your credentials to access the dashboard.</Text>
         <View style={{gap:22,marginTop:mobile?28:42}}>
-          <View style={s.field}><Text style={s.label}>Email Address</Text><View style={s.inputWrap}><Icon name="email-outline" size={23} color="#746C64"/><TextInput accessibilityLabel="Email Address" placeholder="admin@spotgarage.com" placeholderTextColor="#9A938D" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" style={s.input} onSubmitEditing={onSignIn}/></View></View>
-          <View style={s.field}><Text style={s.label}>Password</Text><View style={s.inputWrap}><Icon name="lock-outline" size={23} color="#746C64"/><TextInput accessibilityLabel="Password" placeholder="Enter password" placeholderTextColor="#9A938D" secureTextEntry={!visible} value={password} onChangeText={setPassword} autoCapitalize="none" style={s.input} onSubmitEditing={onSignIn}/><Pressable accessibilityRole="button" accessibilityLabel={visible?'Hide password':'Show password'} onPress={()=>setVisible(!visible)} style={s.eye}><Icon name={visible?'eye-outline':'eye-off-outline'} size={22} color="#746C64"/></Pressable></View></View>
+          <View style={s.field}><Text style={s.label}>Email Address</Text><View style={s.inputWrap}><Icon name="email-outline" size={23} color="#746C64"/><TextInput accessibilityLabel="Email Address" placeholder="admin@spotgarage.com" placeholderTextColor="#9A938D" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" style={s.input} onSubmitEditing={submit}/></View></View>
+          <View style={s.field}><Text style={s.label}>Password</Text><View style={s.inputWrap}><Icon name="lock-outline" size={23} color="#746C64"/><TextInput accessibilityLabel="Password" placeholder="Enter password" placeholderTextColor="#9A938D" secureTextEntry={!visible} value={password} onChangeText={setPassword} autoCapitalize="none" style={s.input} onSubmitEditing={submit}/><Pressable accessibilityRole="button" accessibilityLabel={visible?'Hide password':'Show password'} onPress={()=>setVisible(!visible)} style={s.eye}><Icon name={visible?'eye-outline':'eye-off-outline'} size={22} color="#746C64"/></Pressable></View></View>
         </View>
-        <View style={s.options}><Pressable accessibilityRole="checkbox" accessibilityState={{checked:remember}} onPress={()=>setRemember(!remember)} style={s.remember}><Icon name={remember?'checkbox-marked':'checkbox-blank-outline'} size={23} color="#805638"/><Text style={s.optionText}>Remember me</Text></Pressable><Pressable accessibilityRole="button" onPress={()=>setNotice('Password reset is not connected yet. Click Sign In to open the dashboard.')} style={{minHeight:44,justifyContent:'center'}}><Text style={[s.optionText,{color:'#704027'}]}>Forgot password?</Text></Pressable></View>
+        <View style={s.options}><Pressable accessibilityRole="checkbox" accessibilityState={{checked:remember}} onPress={()=>setRemember(!remember)} style={s.remember}><Icon name={remember?'checkbox-marked':'checkbox-blank-outline'} size={23} color="#805638"/><Text style={s.optionText}>Remember me</Text></Pressable><Pressable accessibilityRole="button" onPress={()=>setNotice('Contact your administrator to reset your password.')} style={{minHeight:44,justifyContent:'center'}}><Text style={[s.optionText,{color:'#704027'}]}>Forgot password?</Text></Pressable></View>
         {!!notice&&<Text accessibilityLiveRegion="polite" style={s.notice}>{notice}</Text>}
-        <Pressable accessibilityRole="button" accessibilityLabel="Sign In" onPress={onSignIn} style={({pressed})=>[s.submit,{opacity:pressed?.85:1}]}><Text style={s.submitText}>Sign In</Text><Icon name="arrow-right" size={24} color="#FFF"/></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel="Sign In" disabled={busy} onPress={submit} style={({pressed})=>[s.submit,{opacity:pressed?.85:1}]}><Text style={s.submitText}>{busy?'Signing in...':'Sign In'}</Text><Icon name="arrow-right" size={24} color="#FFF"/></Pressable>
         <View style={s.footer}><View style={s.divider}/><Icon name="lock-outline" size={19} color="#91857A"/><View style={s.divider}/></View><Text style={s.footerText}>Spot Garage Sales Analytics</Text>
       </View>
     </View>
