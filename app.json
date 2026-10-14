@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "Spot Garage Dashboard",
+    "slug": "spot-garage-dashboard",
+    "version": "1.0.0",
+    "orientation": "default",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "plugins": [
+      "expo-font"
+    ],
+    "web": {
+      "favicon": "./assets/images/spot-garage-logo.jpg"
+    }
+  }
+}

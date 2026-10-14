@@ -1,0 +1,36 @@
+﻿import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {randomUUID} from 'node:crypto';
+import {PGlite} from '@electric-sql/pglite';
+import ExcelJS from 'exceljs';
+import {historicalAnalytics,manualAnalytics,validateDates,exportTable,manilaDay} from '../server/analytics.mjs';
+import {generateReport} from '../server/exports.mjs';
+const records=[{id:1,sales_year:2026,month_number:3,net_sales:115600,receipts:615,pos_average_sale:188.01},{id:2,sales_year:2026,month_number:4,net_sales:80808,receipts:468,pos_average_sale:172.67}];
+test('Monthly filters, POS vs calculated averages, missing-month changes',()=>{const r=historicalAnalytics(records);assert.equal(r.summary.sales,196408);assert.equal(r.rows[0].change,null);assert.equal(r.rows[0].posAverage,188.01);assert.notEqual(r.rows[0].average,188.01);assert.equal(historicalAnalytics(records,'2026-04-01','2026-04-30').rows.length,1);assert.equal(historicalAnalytics([records[0],{...records[1],month_number:5}]).rows[1].change,null);assert.throws(()=>validateDates('2026-02-30',null));assert.equal(manilaDay(new Date('2026-03-01T16:00:00Z')),'2026-03-02');});
+test('Prepared migrations: additive records, authoritative price, retries, reversal, audit and restricted grants',async()=>{
+ const pg=new PGlite();await pg.exec('create role anon; create role authenticated; create role service_role;');
+ await pg.exec(await readFile('supabase/migrations/20261014000100_menu_sales_reports.sql','utf8'));
+ await pg.exec(await readFile('supabase/migrations/20261014000200_seed_existing_menu.sql','utf8'));
+ const save=(quantity,key)=>pg.query('select (public.record_sale($1,$2,$3,$4)).*',['Coffee-Based-Varoom Classic',quantity,key,'test-operator']);
+ const keys=[randomUUID(),randomUUID(),randomUUID()];const saved=[];
+ for(const [i,qty] of [5,5,3].entries())saved.push((await save(qty,keys[i])).rows[0]);
+ await save(3,keys[2]);assert.equal((await pg.query('select count(*)::int n,sum(quantity)::int q,sum(total_amount)::float8 total from public.sales_entries')).rows[0].total,845);
+ assert.equal((await pg.query('select count(*)::int n from public.sales_entries')).rows[0].n,3);
+ assert.ok(saved.every(e=>e.saved_at));assert.equal(Number(saved[0].unit_price),65);
+ await assert.rejects(save(4,keys[2]));await assert.rejects(save(0,randomUUID()));await assert.rejects(save(-1,randomUUID()));
+ await pg.query('select public.reverse_sale($1,$2,$3)',[saved[0].id,'Mistaken quantity','test-operator']);
+ await pg.query('select public.reverse_sale($1,$2,$3)',[saved[0].id,'Mistaken quantity','test-operator']);
+ assert.equal((await pg.query('select count(*)::int n from public.sales_entry_audit_logs')).rows[0].n,4);
+ const entries=(await pg.query('select * from public.sales_entries')).rows;assert.equal(manualAnalytics(entries).sales,520);assert.equal(manualAnalytics(entries).quantity,8);
+ const access=(await pg.query("select has_function_privilege('anon','public.record_sale(text,integer,uuid,text)','execute') allowed")).rows[0];assert.equal(access.allowed,false);
+ assert.equal((await pg.query("select relrowsecurity from pg_class where relname='sales_entries'")).rows[0].relrowsecurity,true);
+ await pg.close();
+});
+test('CSV XLSX PDF exports share the exact preview totals',async()=>{
+ const table=exportTable('monthly',{historical:historicalAnalytics(records),entries:[],products:[],topItems:[]});
+ const csv=await generateReport(table,'csv','Mar-Apr 2026');assert.match(csv.toString(),/196408/);
+ const xlsx=await generateReport(table,'xlsx','Mar-Apr 2026');const w=new ExcelJS.Workbook();await w.xlsx.load(xlsx);assert.equal(w.worksheets[0].lastRow.getCell(3).value,196408);
+ const pdf=await generateReport(table,'pdf','Mar-Apr 2026');assert.equal(pdf.subarray(0,4).toString(),'%PDF');
+ const injection=await generateReport({title:'Test',columns:['Product'],rows:[['=1+1']]},'csv','Test');assert.match(injection.toString(),/'=1\+1/);
+});

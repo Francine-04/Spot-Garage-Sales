@@ -1,0 +1,20 @@
+﻿const assert=require('node:assert/strict');
+const fs=require('node:fs');
+(async()=>{
+const repo=await import('data:text/javascript;base64,'+Buffer.from(fs.readFileSync('src/services/menuEntriesRepository.js','utf8')).toString('base64'));
+let stored=null;global.localStorage={getItem:()=>stored,setItem:(key,value)=>{stored=value;}};
+const item={id:'varoom',name:'Varoom Classic',category:'Coffee-Based',price:65};
+for(const quantity of [5,5,3])repo.saveEntry(item,quantity);
+const entries=repo.readEntries();
+assert.equal(entries.length,3);assert.equal(entries.reduce((s,e)=>s+e.quantity,0),13);assert.equal(entries.reduce((s,e)=>s+e.total,0),845);
+assert.equal(new Set(entries.map(e=>e.id)).size,3);
+assert.ok(entries.every(e=>!isNaN(Date.parse(e.savedAt))));
+assert.equal(repo.manilaDay(new Date('2026-10-12T16:00:00Z')),'2026-10-13');
+assert.equal(repo.manilaDay(new Date('2026-10-12T15:59:59Z')),'2026-10-12');
+for(const n of [0,-1,1.5,Infinity])assert.throws(()=>repo.saveEntry(item,n));
+localStorage.setItem=()=>{throw Error('Storage full');};
+assert.throws(()=>repo.saveEntry(item,2),/Storage full/);assert.equal(repo.readEntries().length,3);
+Object.defineProperty(global,'navigator',{value:{onLine:false},configurable:true});
+assert.throws(()=>repo.saveEntry(item,2),/internet connection/);
+console.log('PASS: cumulative sales, immutable history, Manila date boundaries, validation, storage failure, offline guard');
+})().catch(e=>{console.error(e);process.exit(1)});

@@ -1,0 +1,22 @@
+const {chromium}=require('@playwright/test');
+const assert=require('node:assert/strict');
+(async()=>{
+ const base='http://127.0.0.1:8090';
+ assert.equal((await fetch(base+'/api/entries',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})).status,403);
+ assert.equal((await fetch(base+'/api/entries',{method:'POST',headers:{'Content-Type':'application/json','X-Spot-Garage-Request':'1',Origin:'https://untrusted.example'},body:'{}'})).status,403);
+ const data=await (await fetch(base+'/api/historical?from=2026-04-01&to=2026-04-30')).json();assert.equal(data.historical.summary.sales,80808);assert.equal(data.historical.rows.length,1);
+ const browser=await chromium.launch({channel:'msedge',headless:true});const page=await browser.newPage({viewport:{width:1366,height:768}});
+ await page.goto(base,{waitUntil:'domcontentloaded'});await page.getByRole('button',{name:'Sales Performance',exact:true}).click();
+ await page.getByRole('button',{name:'Date range: All available months',exact:true}).click();
+ await page.getByText('April 2026',{exact:true}).last().click();
+ await page.getByText(/80,808/).first().waitFor();
+ await page.getByRole('button',{name:'Sales Trends',exact:true}).click();
+ await page.getByText(/80,808/).first().waitFor();
+ await page.getByRole('button',{name:'Reports',exact:true}).click();
+ await page.getByText('Report Preview',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'Export format',exact:true}).first().click();
+ await page.getByRole('button',{name:'XLSX',exact:true}).click();
+ await page.setViewportSize({width:390,height:844});await page.getByRole('button',{name:'Toggle navigation',exact:true}).click();await page.getByRole('button',{name:'Products & Menus',exact:true}).click();
+ await page.getByRole('textbox',{name:'New quantity sold for Varoom Classic',exact:true}).waitFor();
+ await browser.close();console.log('PASS live month filter, shared screen date selection, export format, mobile database menu, cross-origin/missing-header write rejection. No database writes.');
+})().catch(e=>{console.error(e);process.exit(1)});

@@ -1,0 +1,12 @@
+﻿import {readFile,writeFile} from 'node:fs/promises';
+import assert from 'node:assert/strict';
+import {db,result} from '../server/db.mjs';
+const baseline=JSON.parse(await readFile('docs/backend/historical-baseline.json','utf8'));
+const sales=await result(db.from('monthly_sales').select('*').order('month_number'));
+const topItems=await result(db.from('monthly_top_items').select('*').order('id'));
+assert.deepEqual(sales,baseline.sales);assert.deepEqual(topItems,baseline.topItems);
+const products=await result(db.from('products').select('*'));const categories=await result(db.from('categories').select('*'));
+assert.equal(products.length,56);assert.equal(categories.length,9);
+const entries=await result(db.from('sales_entries').select('id'));
+const audits=await result(db.from('sales_entry_audit_logs').select('id'));
+console.log(JSON.stringify({historicalRecordsUnchanged:true,products:products.length,categories:categories.length,salesEntries:entries.length,auditRecords:audits.length}));

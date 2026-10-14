@@ -1,0 +1,102 @@
+{
+  "sales": [
+    {
+      "id": 1,
+      "sales_year": 2026,
+      "month_number": 3,
+      "receipts": 615,
+      "net_sales": 115600,
+      "pos_average_sale": 188.01,
+      "created_at": "2026-10-13T20:04:06.813373+00:00"
+    },
+    {
+      "id": 2,
+      "sales_year": 2026,
+      "month_number": 4,
+      "receipts": 468,
+      "net_sales": 80808,
+      "pos_average_sale": 172.67,
+      "created_at": "2026-10-13T20:04:06.813373+00:00"
+    },
+    {
+      "id": 3,
+      "sales_year": 2026,
+      "month_number": 5,
+      "receipts": 419,
+      "net_sales": 85172,
+      "pos_average_sale": 203.27,
+      "created_at": "2026-10-13T20:04:06.813373+00:00"
+    },
+    {
+      "id": 4,
+      "sales_year": 2026,
+      "month_number": 6,
+      "receipts": 568,
+      "net_sales": 110900,
+      "pos_average_sale": 195.2,
+      "created_at": "2026-10-13T20:04:06.813373+00:00"
+    },
+    {
+      "id": 5,
+      "sales_year": 2026,
+      "month_number": 7,
+      "receipts": 628,
+      "net_sales": 104600,
+      "pos_average_sale": 166.62,
+      "created_at": "2026-10-13T20:04:06.813373+00:00"
+    },
+    {
+      "id": 6,
+      "sales_year": 2026,
+      "month_number": 8,
+      "receipts": 583,
+      "net_sales": 107800,
+      "pos_average_sale": 184.91,
+      "created_at": "2026-10-13T20:04:06.813373+00:00"
+    }
+  ],
+  "topItems": [
+    {
+      "id": 1,
+      "monthly_sales_id": 1,
+      "product_name": "16oz Spanish Latte",
+      "units_sold": 77,
+      "item_sales": 6392.93
+    },
+    {
+      "id": 2,
+      "monthly_sales_id": 2,
+      "product_name": "Flavored Fries",
+      "units_sold": 53,
+      "item_sales": 4505
+    },
+    {
+      "id": 3,
+      "monthly_sales_id": 3,
+      "product_name": "16oz Spanish Latte",
+      "units_sold": 65,
+      "item_sales": 5525
+    },
+    {
+      "id": 4,
+      "monthly_sales_id": 4,
+      "product_name": "16oz Spanish Latte",
+      "units_sold": 57,
+      "item_sales": 4870
+    },
+    {
+      "id": 5,
+      "monthly_sales_id": 5,
+      "product_name": "16oz Spanish Latte",
+      "units_sold": 80,
+      "item_sales": 6800
+    },
+    {
+      "id": 6,
+      "monthly_sales_id": 6,
+      "product_name": "16oz Spanish Latte",
+      "units_sold": 80,
+      "item_sales": 6800
+    }
+  ]
+}
