@@ -3,6 +3,11 @@ import {config} from 'dotenv';
 import {createClient} from '@supabase/supabase-js';
 config({path:'.env.server',quiet:true});
 if(!process.env.SUPABASE_URL||!process.env.SUPABASE_SERVICE_ROLE_KEY) throw new Error('Configure .env.server before starting the API.');
+// Hosted Supabase expects the project root, not a copied REST/table endpoint.
+const projectUrl=new URL(process.env.SUPABASE_URL.trim());
+if(projectUrl.protocol==='https:'&&projectUrl.hostname.endsWith('.supabase.co')){
+ process.env.SUPABASE_URL=projectUrl.origin;
+}
 export const db=createClient(process.env.SUPABASE_URL,process.env.SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
 export async function result(query){const {data,error}=await query;if(error)throw Object.assign(new Error(error.message),{code:error.code});return data;}
 export async function allRows(table,apply=q=>q){
