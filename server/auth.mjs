@@ -16,10 +16,17 @@ function allowed(user){return !!user?.email_confirmed_at&&(process.env.ADMIN_USE
 export function protectRequest(req,res,next){
  res.set('Cache-Control','no-store');
  if(!['GET','HEAD','OPTIONS'].includes(req.method)){
-  const expected=process.env.APP_ORIGIN||(!production()?'http://127.0.0.1:8090':null);
+  // Trust configured deployment origins, never a client-supplied Host header.
+  const normalize=value=>{try{const url=new URL(value);return ['http:','https:'].includes(url.protocol)?url.origin:null;}catch{return null;}};
+  const candidates=[process.env.APP_ORIGIN,...(process.env.VERCEL?[
+   'https://spot-garage-sales.vercel.app',
+   ...['VERCEL_PROJECT_PRODUCTION_URL','VERCEL_URL','VERCEL_BRANCH_URL'].map(key=>process.env[key]?`https://${process.env[key]}`:null)
+  ]:[])];
+  if(!production())candidates.push('http://127.0.0.1:8090','http://localhost:8090');
+  const allowedOrigins=new Set(candidates.filter(Boolean).map(normalize).filter(Boolean));
   const origin=req.get('origin');
-  if(!expected)return res.status(503).json({error:'Production origin is not configured.'});
-  if(origin!==expected)return res.status(403).json({error:'Cross-origin writes are not allowed.'});
+  if(!allowedOrigins.size)return res.status(503).json({error:'Production origin is not configured.'});
+  if(!allowedOrigins.has(origin))return res.status(403).json({error:'Cross-origin writes are not allowed.'});
   if(req.get('X-Spot-Garage-Request')!=='1')return res.status(403).json({error:'Missing request header.'});
  }
  next();

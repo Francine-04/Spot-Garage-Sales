@@ -58,3 +58,14 @@ test('Explicit public mode accepts one-click login and marks unverified audit ac
  try{const result=await fetch(`http://127.0.0.1:${server.address().port}/api/auth/login`,{method:'POST',headers:{Origin:process.env.APP_ORIGIN,'X-Spot-Garage-Request':'1','Content-Type':'application/json'},body:'{}'});assert.equal(result.status,200);assert.equal((await result.json()).user.id,'public-visitor');}finally{await new Promise(resolve=>server.close(resolve));}
  }finally{process.env.PUBLIC_ACCESS='false';}
 });
+
+
+test('Vercel origins work despite stale APP_ORIGIN and reject foreign origins',()=>{
+ const keys=['VERCEL','APP_ORIGIN','VERCEL_URL'];const before=keys.map(k=>process.env[k]);
+ try{
+  process.env.VERCEL='1';process.env.APP_ORIGIN='http://localhost:8090/';process.env.VERCEL_URL='spot-garage-preview.vercel.app';
+  for(const [origin,status] of [['https://spot-garage-sales.vercel.app',200],['https://spot-garage-preview.vercel.app',200],['https://evil.example',403],['null',403]]){
+   const res=response();protectRequest({method:'POST',get:k=>k==='origin'?origin:'1'},res,()=>{});assert.equal(res.statusCode,status);
+  }
+ }finally{keys.forEach((k,i)=>{if(before[i]===undefined)delete process.env[k];else process.env[k]=before[i];});}
+});
