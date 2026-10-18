@@ -74,3 +74,7 @@ The repository's existing Expo/React Native toolchain and ExcelJS transitive dep
 Successful saves/refunds refetch shared database state. Sales Performance and Sales Trends default to daily sales once manual entries exist; Historical POS remains separately selectable. Reports automatically selects Daily Entries until the user chooses a report and shows live daily-sales KPIs. Month/year choices include manually recorded dates. Current filters continue to apply; saving an October sale does not change a March-only report. Open tabs receive BroadcastChannel invalidation; other sessions refresh on focus/online and at 15-second intervals. Reversals are excluded from revenue and quantity totals. Manual entries are never called POS receipts or added to imported monthly summaries.
 
 Validation: scripts/sales-sync-check.cjs intercepts test writes and checks save-to-screen propagation plus mobile reflow; scripts/live-sales-check.mjs checks filtering and reversal exclusion. No test sales were persisted.
+
+
+## Payment methods (October 18, 2026)
+Menu sales now save Cash, GCash, Maya, Card, GoTyme or MariBank through the five-argument record_sale RPC. The additive migration adds nullable payment_method; old records remain Not recorded. Retry keys include payment method. Reversed entries are excluded from breakdowns. Daily Transactions, daily sales analytics, Peak & Off-Peak and Reports display payment data; Daily Entries exports include it and Payment Methods reports aggregate it. Tests use isolated data and mocked browser writes.
