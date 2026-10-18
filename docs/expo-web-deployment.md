@@ -126,3 +126,6 @@ Sources:
 - https://vercel.com/docs/functions/limitations
 - https://docs.expo.dev/guides/publishing-websites/
 - https://supabase.com/docs/guides/auth/general-configuration
+
+
+Export requests require `APP_ORIGIN=https://spot-garage-sales.vercel.app` (no trailing slash). This public, non-secret setting is included in `vercel.json`. If an APP_ORIGIN override exists in Vercel Project Settings, set it to the same value and redeploy. When changing the website domain, update this origin too. Cross-origin write protection remains enabled.

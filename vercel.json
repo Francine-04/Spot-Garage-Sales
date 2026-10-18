@@ -40,6 +40,7 @@
     }
   ],
   "env": {
-    "PUBLIC_ACCESS": "true"
+    "PUBLIC_ACCESS": "true",
+    "APP_ORIGIN": "https://spot-garage-sales.vercel.app"
   }
 }
