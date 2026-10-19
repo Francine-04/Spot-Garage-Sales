@@ -15,16 +15,16 @@ export default function HomeScreen({width,date,setDate,navigate,dateOptions,styl
   const parentWidth=useContext(layoutWidthContext)||width;
   const [gridWidth,setGridWidth]=useState(0);
   const available=gridWidth||parentWidth;
-  const desktop=available>=1000, tablet=available>=620;
+  const desktop=available>=760, tablet=available>=620;
   const columns=available>=1320?6:available>=900?3:available>=460?2:1;
 
   return <>
 
     <View style={[s.homeHero,desktop&&s.homeHeroDesktop]}>
 
-      <Image source={require("../../assets/images/home-hero-background.jpg")} accessibilityLabel="Spot Garage café entrance with motorcycle" resizeMode="contain" style={[s.heroBackgroundPhoto,desktop?{top:-width*.48}:{top:0}]}/>
+      <Image source={require("../../assets/images/home-hero-background.jpg")} accessibilityLabel="Spot Garage café entrance with motorcycle" resizeMode="cover" style={{position:"absolute",top:0,bottom:0,right:0,width:desktop?"52%":"100%",height:"100%"}}/>
 
-      <View style={[s.heroWash,desktop&&s.heroWashDesktop]}/>
+      <View style={{position:"absolute",top:0,bottom:0,left:0,width:desktop?"48%":"100%",backgroundColor:desktop?"#F0E7DC":"rgba(248,243,236,.84)"}}/>
 
       <View style={[s.homeHeroCopy,desktop&&s.homeHeroCopyDesktop]}>
 

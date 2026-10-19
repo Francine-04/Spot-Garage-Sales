@@ -41,7 +41,7 @@ export default function ProductsMenuScreen({navigate,width,viewportHeight=900}) 
 
  const availableWidth=useContext(layoutWidthContext)||width;
  const s=useResponsiveStyles(baseStyles,availableWidth);
- const today=entries.filter(e=>e.day===day&&e.status==='saved'),compact=availableWidth<1064,mobile=availableWidth<680;
+ const today=entries.filter(e=>e.day===day&&e.status==='saved'),compact=availableWidth<1400,mobile=availableWidth<680;
  const [helpOpen,setHelpOpen]=useState(false);
  const railWidth=availableWidth<1200?292:320;
 
@@ -77,7 +77,7 @@ export default function ProductsMenuScreen({navigate,width,viewportHeight=900}) 
  const paymentPicker=item=><PaymentPicker value={paymentFor(item)} onChange={value=>{if(!batchLock.current&&!saving.current.has(item.id))setPaymentDrafts(d=>({...d,[item.id]:value}));}}/>;
  const [panelWidth,setPanelWidth]=useState(0);
  const panelHeight=mobile?Math.max(380,Math.min(620,viewportHeight*.70)):Math.max(420,Math.min(650,viewportHeight-280));
- const tableWidth=Math.max(1100,panelWidth-2); 
+ const tableWidth=Math.max(1060,panelWidth-2);
  const col=i=>({width:['22%','9%','10%','12%','20%','6%','21%'][i],paddingHorizontal:i===5?4:12});
 
  const records=history==='all'?today:today.filter(e=>e.itemId===history?.id);
@@ -127,9 +127,9 @@ export default function ProductsMenuScreen({navigate,width,viewportHeight=900}) 
 
  <View style={s.card}><Text style={s.section}>Today's Summary</Text><Text style={s.muted}>{label(day)} · Philippine time</Text><View style={s.grid}>{[['cart-outline','Total Items Sold',total.qty],['cash-multiple','Total Sales',peso(total.sales)],['receipt','Menu Items',items.length],['view-grid-outline','Categories',new Set(items.map(i=>i.category)).size]].map(([icon,title,v])=><View key={title} style={s.stat}><Icon name={icon} size={23} color="#704027"/><View style={{flex:1}}><Text style={s.tiny}>{title}</Text><Text style={s.value}>{v}</Text></View></View>)}</View></View>
 
- <PaymentBreakdown entries={today}/><View style={s.card}><View style={s.between}><Text style={s.section}>Recent Saved Entries</Text><Pressable onPress={()=>setHistory('all')}><Text style={s.link}>View All →</Text></Pressable></View><View style={[s.mini,s.tableHead]}><Text style={s.tiny}>Time (PHT)</Text><Text style={s.tiny}>Menu Item</Text><Text style={s.tiny}>Qty / Total</Text></View><ScrollView nestedScrollEnabled style={{maxHeight:Math.max(130,viewportHeight-685)}}>{today.slice(0,20).map(e=><View key={e.id} style={s.recent}><Text style={[s.tiny,{width:83}]}>{manilaTime(e.savedAt)}</Text><Text style={[s.tiny,{flex:1}]}>{e.name}{'\n'}{e.paymentMethod}</Text><View><Text style={[s.tiny,{textAlign:'right'}]}>+{e.quantity}</Text><Text style={s.tiny}>{peso(e.total)}</Text></View></View>)}{!today.length&&<Text style={s.empty}>No saved entries today.</Text>}</ScrollView></View>
+ <PaymentBreakdown entries={today}/><View style={[s.card,{width:'100%',padding:12,gap:8}]}><View style={s.between}><Text style={s.section}>Recent Saved Entries</Text><Pressable accessibilityRole="button" onPress={()=>setHistory('all')} style={{minHeight:44,justifyContent:'center'}}><Text style={s.link}>View All</Text></Pressable></View><View style={{flexDirection:'row',alignItems:'center',paddingVertical:10,paddingHorizontal:8,gap:10,backgroundColor:'#F4F0EB',borderRadius:5}}><Text style={[s.tiny,{width:90}]}>Time (PHT)</Text><Text style={[s.tiny,{flex:1,minWidth:0}]}>Menu Item</Text><Text style={[s.tiny,{width:82,textAlign:'right'}]}>Qty / Total</Text></View><ScrollView nestedScrollEnabled style={{maxHeight:240,flexGrow:0}}>{today.slice(0,20).map(e=><View key={e.id} style={[s.recent,{paddingVertical:10,paddingHorizontal:8,gap:10,alignItems:'center'}]}><Text style={[s.tiny,{width:90}]}>{manilaTime(e.savedAt)}</Text><View style={{flex:1,minWidth:0,gap:3}}><Text style={[s.tiny,{color:'#29384D',fontWeight:'600'}]}>{e.name}</Text><Text style={[s.tiny,{fontSize:11}]}>{e.paymentMethod}</Text></View><View style={{width:82,gap:3}}><Text style={[s.tiny,{textAlign:'right'}]}>+{e.quantity}</Text><Text style={[s.tiny,{textAlign:'right',fontWeight:'600',color:'#563725'}]}>{peso(e.total)}</Text></View></View>)}{!today.length&&<Text style={[s.empty,{paddingVertical:16,paddingHorizontal:8}]}>No saved entries today.</Text>}</ScrollView></View>
 
- <View style={s.card}><Pressable accessibilityRole="button" accessibilityState={{expanded:helpOpen}} onPress={()=>setHelpOpen(!helpOpen)} style={{minHeight:44,flexDirection:"row",alignItems:"center",justifyContent:"space-between"}}><Text style={s.section}>How It Works</Text><Icon name={helpOpen?"chevron-up":"chevron-down"} size={22}/></Pressable>{helpOpen&&['Enter only the new quantity sold and click Save.','Philippine date and time are recorded automatically.','Each save adds to the daily total and resets the input to 0.'].map((t,i)=><Text key={t} style={s.instruction}>{i+1}. {t}</Text>)}<Text style={s.tiny}>Saved securely to Supabase.</Text></View></ScrollView></View>
+ <View style={s.card}><Pressable accessibilityRole="button" accessibilityState={{expanded:helpOpen}} onPress={()=>setHelpOpen(!helpOpen)} style={{minHeight:44,flexDirection:"row",alignItems:"center",justifyContent:"space-between"}}><Text style={s.section}>How It Works</Text><Icon name={helpOpen?"chevron-up":"chevron-down"} size={22}/></Pressable>{helpOpen&&['Enter only the new quantity sold and click Save.','Philippine date and time are recorded automatically.','Each save adds to the daily total and resets the input to 0.'].map((t,i)=><Text key={t} style={s.instruction}>{i+1}. {t}</Text>)}</View></ScrollView></View>
 
  
 

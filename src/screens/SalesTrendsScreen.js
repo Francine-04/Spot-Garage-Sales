@@ -1,3 +1,7 @@
+import {useContext} from 'react';
+import SalesPeriodContext from '../components/SalesPeriodContext';
+import {groupHistory} from '../services/salesPeriods';
+import SalesBarChart from '../components/SalesBarChart';
 import SalesSource from '../components/SalesSource';
 import {useDatabase,selectedHistory,reportDates} from '../state/DatabaseContext';
 import ExportControl from '../components/ExportControl';
@@ -52,18 +56,7 @@ function KpiCard({label,value,change,icon}) { const styles=useResponsiveStyles(b
 
 
 
-function MonthlyTrend({chartWidth,monthly}) { const styles=useResponsiveStyles(baseStyles); const [selected,setSelected]=useState(6);
-
-  const maxSales=Math.max(...monthly.map(x=>x.sales)),maxTransactions=Math.max(...monthly.map(x=>x.transactions));
-
-  const [plotWidth,setPlotWidth]=useState(0);
-  const columnWidth=Math.max(48,(plotWidth||chartWidth)/Math.max(1,monthly.length));
-
-  return <Panel style={styles.trendPanel}><View style={styles.panelHeader}><View style={{flex:1,minWidth:0,maxWidth:"100%"}}><Text style={styles.panelTitle}>Sales Trend</Text><Text style={styles.panelSubtitle}>Monthly net sales and transactions for the selected period.</Text></View><View style={styles.legend}><View style={[styles.dot,{backgroundColor:"#E1BE9E"}]}/><Text style={styles.legendText}>Net Sales (₱)</Text><View style={[styles.dot,{backgroundColor:"#662A12"}]}/><Text style={styles.legendText}>Transactions</Text><View style={styles.periodButton}><Text style={styles.periodText}>Monthly</Text><MaterialCommunityIcons name="chevron-down" size={17}/></View></View></View><ScrollView horizontal showsHorizontalScrollIndicator={false} onLayout={event=>setPlotWidth(event.nativeEvent.layout.width)} contentContainerStyle={styles.chartScroller}><View style={[styles.mainChart,{width:Math.max(576,plotWidth||chartWidth)}]}>{monthly.map((item,index)=><Pressable accessibilityRole="button" key={item.month} onPress={()=>setSelected(index)} style={[styles.monthCol,{width:columnWidth}]}>{selected===index&&<View style={styles.tooltip}><Text style={styles.tooltipMonth}>{item.month.slice(0,3)} {item.sales_year}</Text><Text style={styles.tooltipLine}>● Net Sales     {peso(item.sales)}</Text><Text style={[styles.tooltipLine,{color:"#A77B5D"}]}>● Transactions   {item.transactions}</Text></View>}<View style={styles.mainPlot}><View style={[styles.salesBar,{height:Math.max(10,item.sales/maxSales*155)}]}/><View style={[styles.lineDot,{bottom:Math.max(6,item.transactions/maxTransactions*140)}]}/></View><Text style={styles.axisLabel}>{item.month.slice(0,3)}</Text></Pressable>)}</View></ScrollView></Panel>;
-
-}
-
-
+function MonthlyTrend({monthly}){const styles=useResponsiveStyles(baseStyles);return <Panel style={styles.trendPanel}><Text style={styles.panelTitle}>Sales Trend</Text><SalesBarChart rows={monthly.map(r=>({...r,key:r.period,label:r.period}))} series={[{key:'sales',label:'Sales (PHP)',format:peso},{key:'transactions',label:'POS receipts'}]}/></Panel>;}
 
 function WeekdayTable() { const styles=useResponsiveStyles(baseStyles); const max=Math.max(...weekdays.map(x=>x.sales));
 
@@ -89,16 +82,10 @@ function ComparisonChart() { const styles=useResponsiveStyles(baseStyles); const
 
 
 
-function GrowthChart({monthly}) { const styles=useResponsiveStyles(baseStyles); const max=Math.max(...monthly.map(x=>Math.abs(x.growth)));
-
-  return <Panel style={styles.smallPanel}><Text style={styles.panelTitle}>Sales Growth Rate</Text><View style={styles.growthChart}>{monthly.map(x=><View key={x.month} style={styles.growthCol}><View style={styles.growthPlot}><View style={[styles.growthBar,{height:Math.max(3,Math.abs(x.growth)/max*68),backgroundColor:x.growth<0?"#E56B70":"#4FA36D",top:x.growth<0?42:undefined,bottom:x.growth<0?undefined:42}]}/></View><Text style={styles.smallAxis}>{x.month.slice(0,1)}</Text></View>)}</View></Panel>;
-
-}
-
-
+function GrowthChart({monthly}){const styles=useResponsiveStyles(baseStyles);return <Panel style={styles.smallPanel}><Text style={styles.panelTitle}>Sales Growth Rate</Text><SalesBarChart rows={monthly.map(r=>({...r,key:r.period,label:r.period}))} series={[{key:'growth',label:'Growth (%)',format:v=>v.toFixed(1)+'%'}]}/></Panel>;}
 
 function HistoricalScreen({date,setDate,dateOptions,navigate,width,SelectorComponent:Selector}) { const styles=useResponsiveStyles(baseStyles); const compact=width<880;
- const db=useDatabase(); const monthly=selectedHistory(db.historical,date).rows.map(r=>({...r,transactions:r.receipts,growth:r.change})); const net=monthly.reduce((a,r)=>a+r.sales,0),receipts=monthly.reduce((a,r)=>a+r.receipts,0);
+ const db=useDatabase(),period=useContext(SalesPeriodContext); const monthly=groupHistory(selectedHistory(db.historical,date).rows,period).map(r=>({...r,transactions:r.receipts,growth:r.change})); const net=monthly.reduce((a,r)=>a+r.sales,0),receipts=monthly.reduce((a,r)=>a+r.receipts,0);
 
   const availableWidth=Math.max(320,width-(compact?32:52));
 
@@ -106,15 +93,14 @@ function HistoricalScreen({date,setDate,dateOptions,navigate,width,SelectorCompo
 
   const exportData=()=>{if(Platform.OS!=="web")return;const csv=["Month,Net Sales,Transactions,Growth",...monthly.map(x=>`${x.month},${x.sales},${x.transactions},${x.growth}`)].join("\n"),a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="spot-garage-sales-trends-demo.csv";a.click();URL.revokeObjectURL(a.href)};
 
-  return <><View style={[styles.pageHead,compact&&styles.pageHeadCompact]}><View style={{maxWidth:"100%",flexShrink:1}}><View style={styles.titleRow}><Text style={styles.pageTitle}>Sales Trends</Text><Text style={styles.demoBadge}>HISTORICAL POS</Text></View><Text style={styles.pageSubtitle}>Analyze your sales patterns over time to identify opportunities and plan ahead.</Text></View><View style={styles.actions}><View style={styles.dateSelector}><Selector label="Date range" value={date} options={dateOptions} onChange={setDate} compact/></View><ExportControl type="trends" filters={reportDates(date)}/></View></View>
-
+  return <>
   <View style={styles.kpiGrid}><KpiCard label="Net Sales" value={peso(net)} change="12.5" icon="cash-multiple"/><KpiCard label="Total Receipts" value={receipts.toLocaleString()} change="8.2" icon="receipt-text-outline"/><KpiCard label="Average Sale" value={receipts?peso(net/receipts):"Unavailable"} change="4.6" icon="cart-outline"/><KpiCard label="Sales Growth" value={monthly.at(-1)?.change==null?"Unavailable":monthly.at(-1).change.toFixed(1)+"%"} change="12.5" icon="percent-outline"/></View>
 
   <View style={[styles.primaryGrid,compact&&styles.stack]}><MonthlyTrend monthly={monthly} chartWidth={trendChartWidth}/><Panel style={styles.weekPanel}><Text style={styles.panelTitle}>Daily historical trends</Text><Text style={styles.panelSubtitle}>Not available from monthly POS data. Daily activity is available on Peak &amp; Off-Peak after manual sales are recorded.</Text></Panel></View>
 
   <View style={styles.secondaryGrid}><Panel style={styles.smallPanel}><Text style={styles.panelTitle}>Hourly historical sales</Text><Text style={styles.panelSubtitle}>Not available from current POS data.</Text></Panel><Panel style={styles.smallPanel}><Text style={styles.panelTitle}>Year-over-year comparison</Text><Text style={styles.panelSubtitle}>A matching previous-year dataset is not available.</Text></Panel><GrowthChart monthly={monthly}/></View>
 
-  <Panel style={styles.insights}><View style={styles.insightLead}><View style={styles.insightIcon}><MaterialCommunityIcons name="lightbulb-outline" size={27} color="#66311B"/></View><Text style={styles.insightsTitle}>Key Insights</Text></View>{[["trending-up","Monthly coverage",`${monthly.length} available monthly records selected.`],["clock-outline","Comparison method","Changes compare consecutive calendar months; missing periods are not filled."],["calendar-month-outline","Separate sources","Manual entries are shown separately from historical POS receipts."]].map(([icon,title,text])=><View key={title} style={styles.insightItem}><MaterialCommunityIcons name={icon} size={27} color="#66311B"/><View style={{flex:1,minWidth:0}}><Text style={styles.insightTitle}>{title}</Text><Text style={styles.insightText}>{text}</Text></View></View>)}</Panel></>;
+  <Panel style={styles.insights}><View style={styles.insightLead}><View style={styles.insightIcon}><MaterialCommunityIcons name="lightbulb-outline" size={27} color="#66311B"/></View><Text style={styles.insightsTitle}>Key Insights</Text></View>{[["trending-up","Monthly coverage",`${monthly.length} available ${period.toLowerCase()} records selected.`],["clock-outline","Comparison method","Changes compare consecutive calendar months; missing periods are not filled."],["calendar-month-outline","Separate sources","Manual entries are shown separately from historical POS receipts."]].map(([icon,title,text])=><View key={title} style={styles.insightItem}><MaterialCommunityIcons name={icon} size={27} color="#66311B"/><View style={{flex:1,minWidth:0}}><Text style={styles.insightTitle}>{title}</Text><Text style={styles.insightText}>{text}</Text></View></View>)}</Panel></>;
 
 }
 
